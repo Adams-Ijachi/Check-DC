@@ -3,14 +3,25 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Traits\Borrowable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasRoles, Borrowable;
+
+    const ROLE_ADMIN = "admin";
+    const ROLE_READER = "reader";
+    const ROLE_AUTHOR = "author";
+
 
     /**
      * The attributes that are mass assignable.
@@ -18,9 +29,14 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
+        'age',
+        'address',
+        'username',
+        'status_id',
     ];
 
     /**
@@ -39,6 +55,54 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'email_verified_at' => 'datetime',
+        'age' => 'integer',
     ];
+
+    /**
+     * Get the user's first name.
+     *
+     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     */
+    protected function password(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => Hash::make($value),
+        );
+    }
+
+    // full name
+
+    protected function fullname(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => "{$this->first_name} {$this->last_name}",
+        );
+    }
+
+
+    // scope not me
+    public function scopeNotAdmin($query)
+    {
+        return $query->whereHas('roles', function ($q) {
+            $q->where('name', '!=', self::ROLE_ADMIN);
+        });
+    }
+
+    /**
+     * Get the status that owns the user.
+     */
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class);
+    }
+
+
+    public function lendings()
+    {
+        return $this->hasMany(Lending::class);
+    }
+
+
+
+
 }

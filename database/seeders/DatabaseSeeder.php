@@ -14,6 +14,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        $this->call([
+            TagSeeder::class,
+            CategorySeeder::class,
+            RoleSeeder::class,
+            StatusSeeder::class,
+            AdminSeeder::class,
+            AccessLevelSeeder::class,
+            PlanSeeder::class,
+            AuthorSeeder::class,
+            ReaderSeeder::class,
+            BookSeeder::class,
+            LendingSeeder::class,
+
+        ]);
         // \App\Models\User::factory(10)->create();
 
         // \App\Models\User::factory()->create([
