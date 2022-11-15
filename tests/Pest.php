@@ -11,6 +11,8 @@
 |
 */
 
+use App\Models\User;
+
 uses(Tests\TestCase::class)->in('Feature');
 
 /*
@@ -39,7 +41,16 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function login($user = null, $role = null): \Tests\TestCase
 {
-    // ..
+    $user = $user ?: User::factory()->create();
+    $user->assignRole($role ?: User::ROLE_READER);
+
+    return test()->actingAs($user)->withHeaders([
+        'Accept' => 'application/json',
+    ]);
+
 }
+
+
+

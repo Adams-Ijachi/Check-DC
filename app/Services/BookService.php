@@ -7,28 +7,109 @@ namespace App\Services;
 use App\Exceptions\UserNotAnAuthorException;
 use App\Http\Requests\Api\CreateBookFormRequest;
 use App\Http\Requests\Api\UpdateBookFormRequest;
+use App\Http\Requests\AuthorCreateBookFormRequest;
 use App\Models\Book;
 use App\Models\User;
 use DB;
 class BookService
 {
 
+    final function authorCreateBook(AuthorCreateBookFormRequest $request):Book
+    {
+
+        $validatedData = $request->validated();
+        $bookValidatedData = $request->safe()->except(
+            'access_level_ids', 'tag_ids', 'category_ids', 'plan_ids');
+        $validatedData['author_ids'] = \Auth::id();
+
+        return $this->createBook($bookValidatedData, $validatedData);
+
+    }
+
+    final function authorUpdateBook(Book $book, AuthorCreateBookFormRequest $request):Book
+    {
+        $validatedData = $request->validated();
+        $bookValidatedData = $request->safe()->except(
+            'access_level_ids', 'tag_ids', 'category_ids', 'plan_ids');
+        $validatedData['author_ids'] = \Auth::id();
+
+        return $this->updateBook($book, $bookValidatedData, $validatedData);
+
+    }
+
     // create a new book
     /**
      * @throws UserNotAnAuthorException
      */
-    final function createBook(CreateBookFormRequest $request): Book
+    final function adminCreateBook(CreateBookFormRequest $request): Book
     {
 
 
         $validatedData = $request->validated();
+        $bookValidatedData = $request->safe()->except(
+            'access_level_ids', 'tag_ids', 'category_ids', 'plan_ids', 'author_ids');
 
         $this->validateAuthorIdHaveAuthorRole($validatedData['author_ids']);
 
-        return DB::transaction(function () use ( $request, $validatedData) {
+        return $this->createBook($bookValidatedData, $validatedData);
+    }
+
+
+
+    /**
+     * @throws UserNotAnAuthorException
+     */
+    final function adminUpdateBook(Book $book, UpdateBookFormRequest $request): Book
+    {
+        $validatedData = $request->validated();
+
+        $bookValidatedData = $request->safe()->except(
+            'access_level_ids', 'tag_ids', 'category_ids', 'plan_ids', 'author_ids');
+
+        $this->validateAuthorIdHaveAuthorRole($validatedData['author_ids']);
+
+        return $this->updateBook($book, $bookValidatedData, $validatedData);
+
+    }
+
+
+    /**
+     * @throws UserNotAnAuthorException
+     */
+    final function checkIfUserIsAuthor(Book $book): void
+    {
+
+        if (!\Auth::user()->isAuthor($book)) {
+            throw new UserNotAnAuthorException("You are not an author of this book");
+        }
+    }
+
+
+    /**
+     * @throws UserNotAnAuthorException
+     */
+    private function validateAuthorIdHaveAuthorRole(array $authorIds): void
+    {
+        $authors = User::whereIn('id', $authorIds)->get();
+
+        foreach ($authors as $author) {
+            if (!$author->hasRole('author')) {
+                throw new UserNotAnAuthorException("User with id {$author->id} is not an author");
+            }
+        }
+    }
+
+    /**
+     * @param array $bookValidatedData
+     * @param mixed $validatedData
+     * @return mixed
+     */
+    public function createBook(array $bookValidatedData, mixed $validatedData): mixed
+    {
+        return DB::transaction(function () use ($bookValidatedData, $validatedData) {
 
             $book = Book::create(
-                $request->safe()->except('access_level_ids','tag_ids','category_ids', 'plan_ids','author_ids'));
+                $bookValidatedData);
 
             $book->accessLevels()->attach($validatedData['access_level_ids']);
 
@@ -52,20 +133,17 @@ class BookService
         });
     }
 
-    // update a book
-
     /**
-     * @throws UserNotAnAuthorException
+     * @param Book $book
+     * @param array $bookValidatedData
+     * @param mixed $validatedData
+     * @return mixed
      */
-    final function updateBook(Book $book, UpdateBookFormRequest $request): Book
+    public function updateBook(Book $book, array $bookValidatedData, mixed $validatedData): mixed
     {
-        $validatedData = $request->validated();
+        return DB::transaction(function () use ($book, $bookValidatedData, $validatedData) {
 
-        $this->validateAuthorIdHaveAuthorRole($validatedData['author_ids']);
-
-        return DB::transaction(function () use ($book, $request, $validatedData) {
-
-            $book->update($request->safe()->except('access_level_ids','tag_ids','category_ids', 'plan_ids','author_ids'));
+            $book->update($bookValidatedData);
 
             $book->accessLevels()->sync($validatedData['access_level_ids']);
 
@@ -83,21 +161,6 @@ class BookService
 
             return $book;
         });
-
-    }
-
-    /**
-     * @throws UserNotAnAuthorException
-     */
-    private function validateAuthorIdHaveAuthorRole(array $authorIds): void
-    {
-        $authors = User::whereIn('id', $authorIds)->get();
-
-        foreach ($authors as $author) {
-            if (!$author->hasRole('author')) {
-                throw new UserNotAnAuthorException("User with id {$author->id} is not an author");
-            }
-        }
     }
 
     private function createBookTags(Book $book, mixed $tags)

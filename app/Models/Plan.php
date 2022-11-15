@@ -3,6 +3,7 @@
 namespace App\Models;
 
 
+use App\Traits\StatusTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Support\Str;
 
 class Plan extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, StatusTrait;
 
     protected $fillable = [
         'name',
@@ -37,4 +38,6 @@ class Plan extends Model
     {
         return $this->belongsTo(Status::class);
     }
+
+
 }

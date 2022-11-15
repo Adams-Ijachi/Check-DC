@@ -29,7 +29,7 @@ class BookFactory extends Factory
             'prologue' => $this->faker->paragraph,
             'edition' => $this->faker->sentence,
             'description' => $this->faker->paragraph,
-            'status_id' => Status::where('name', Status::STATUS_ACTIVE)->first()->id,
+            'status_id' => Status::where('name', Status::STATUS_AVAILABLE)->first()->id,
         ];
     }
 

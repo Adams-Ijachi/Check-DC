@@ -26,23 +26,30 @@ class ManageBooksController extends Controller
     public function store(CreateBookFormRequest $request)
     {
         try {
-            $book = app(BookService::class)->createBook($request);
+            $book = app(BookService::class)->adminCreateBook($request);
 
             return BookResource::make(
                 $book->load('status','plans','accessLevels','categories','tags'));
         }
         catch (UserNotAnAuthorException $exception){
             return response()->json(['message' => $exception->getMessage()], 422);
+        }catch (\Exception $exception){
+            return response()->json(['message' => $exception->getMessage()], 500);
         }
     }
 
     /**
-     * @throws UserNotAnAuthorException
      */
     public function update(UpdateBookFormRequest $request, Book $book)
     {
-        $book = app(BookService::class)->updateBook($book, $request);
-        return BookResource::make($book->load('status','plans','accessLevels','categories','tags'));
+        try{
+            $book = app(BookService::class)->adminUpdateBook($book, $request);
+            return BookResource::make($book->load('status','plans','accessLevels','categories','tags'));
+        }catch (UserNotAnAuthorException $exception){
+            return response()->json(['message' => $exception->getMessage()], 422);
+        } catch (\Exception $exception){
+            return response()->json(['message' => $exception->getMessage()], 500);
+        }
     }
 
     public function destroy(Book $book)

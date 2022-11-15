@@ -26,21 +26,7 @@ class AuthService
         return $user->createToken('authToken')->plainTextToken;
     }
 
-//    public function register($request)
-//    {
-//        $request->validate([
-//            'name' => 'required',
-//            'email' => 'required|email',
-//            'password' => 'required',
-//            'c_password' => 'required|same:password',
-//        ]);
-//
-//        $input = $request->all();
-//        $input['password'] = bcrypt($input['password']);
-//        $user = User::create($input);
-//        $token = $user->createToken('authToken')->accessToken;
-//        return response()->json(['token' => $token], 200);
-//    }
+
 
     public function logout()
     {

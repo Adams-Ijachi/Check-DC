@@ -7,6 +7,7 @@ use App\Http\Requests\CreateLendingFormRequest;
 use App\Http\Requests\UpdateLendingFormRequest;
 use App\Http\Resources\LendingResource;
 use App\Models\Lending;
+use App\Services\LendingService;
 
 class ManageLendingController extends Controller
 {
@@ -25,7 +26,7 @@ class ManageLendingController extends Controller
 
     public function store(CreateLendingFormRequest $request)
     {
-        $lending = Lending::create($request->validated());
+        $lending = app(LendingService::class)->lendBook($request->validated());
 
         return LendingResource::make($lending->load('book','user'));
     }

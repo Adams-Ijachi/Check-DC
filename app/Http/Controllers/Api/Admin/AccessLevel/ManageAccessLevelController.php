@@ -17,6 +17,7 @@ class ManageAccessLevelController extends Controller
 
     public function show(AccessLevel $accessLevel)
     {
+
         return AccessLevelResource::make($accessLevel);
     }
 

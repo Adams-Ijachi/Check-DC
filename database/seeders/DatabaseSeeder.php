@@ -26,7 +26,6 @@ class DatabaseSeeder extends Seeder
             ReaderSeeder::class,
             BookSeeder::class,
             LendingSeeder::class,
-
         ]);
         // \App\Models\User::factory(10)->create();
 

@@ -28,6 +28,12 @@ class Book extends Model
     ];
 
 
+    public function isAvailable(): bool
+    {
+        return $this->status_id === Status::where('name', Status::STATUS_AVAILABLE)->first()->id;
+    }
+
+
     public function plans(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Plan::class, 'book_plans');

@@ -30,6 +30,8 @@ class UserResource extends JsonResource
                 return $this->roles->pluck('name');
             }),
 
+
+
         ];
     }
 }
